@@ -1,0 +1,234 @@
+---
+title: "Project1"
+author: "Sahil Bolar"
+date: "3/22/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE, fig.align = "center", 
+    warning = F, message = F, tidy = TRUE, tidy.opts = list(width.cutoff = 60), 
+    R.options = list(max.print = 100))
+```
+
+## Project 1
+# Sahil Bolar
+# ssb2747
+
+# Introduction
+
+This project contains two datasets from FiveThirtyEight with data on major, salary, employment, and other pertinent information about the job market. One dataset contains information on all college graduates, while the other contains information only on recent graduates. I am interested in seeing whether and to what extent the job market differs for recent graduates vs the overall workforce, controlling for major choice. Furthermore, I'm interested in looking into which majors and major categories are more/less popular among recent graduates than among the overall workforce.
+
+```{r}
+library(fivethirtyeight)
+library(tidyverse)
+college_all_ages %>%  glimpse
+college_recent_grads %>%  glimpse
+```
+# Data Wrangling
+
+We will join both datasets by major. Both of these datasets contain exactly the same majors, so we will use a full join. There are no majors exclusive to any one of these datasets, so no information will be lost. The columns common to both datasets will be suffixes by either "_all" or "_recent", depending on which dataset it comes from. There are a few variable (e.g. sharewomen) that are present only in the recent graduates dataset.
+```{r}
+college_join <- full_join(college_all_ages, college_recent_grads, by=c('major_code' = 'major_code'), suffix = c('_all', '_recent')) 
+college_join %>% glimpse 
+```
+Let's select only those variables that appear in both datasets and remove rows with NA in the total population variable. Then we can examine some overall summary statistics. 
+```{r}
+
+college_join <- college_join %>% 
+  select(contains('_all') | contains('_recent')) %>% 
+  filter(!is.na(total_all) & !is.na(total_recent)) %>% 
+  mutate(prop_recent = total_recent / (total_recent + total_all)) 
+college_join %>%
+  summarize(mean(unemployment_rate_all),
+            mean(unemployment_rate_recent),
+            mean(median_all),
+            mean(median_recent)) 
+```
+As we expect, the median income is lower among recent graduates than among all graduates by about $`r round(56786-40077,-2)`. The unemployment rate is also higher among recent graduates by about `r round(0.0680-0.0574,3)` percentage points. 
+
+Let's examine some summary statistics again, but this time group it by the major category (e.g. Engineering, Business, etc.). We create several summary statistics for each major category and type (i.e. recent graduate), including the mean unemployment, mean median salary (i.e. for a particular major category, what is the average of each major's median salary), minimum median salary, maximum median salary, standard deviation of median salary and proportion of the group that contains recent graduates. We can create new variables from this data examining the difference in unemployment and median salary between recent and all graduates, and also the average overall median salary for a group.
+```{r}
+
+major_category_data <- college_join %>% 
+  select(contains('_all') | contains('_recent')) %>%
+  na.omit() %>% 
+  group_by(major_category_all) %>% 
+  summarize(groupmean_unemployment_all = weighted.mean(unemployment_rate_all, total_all),
+            groupmean_unemployment_recent = weighted.mean(unemployment_rate_recent, total_recent),
+            groupmean_salary50_all = weighted.mean(median_all, total_all),
+            groupmean_salary50_recent = weighted.mean(median_recent, total_recent),
+            groupmin_salary50_all = min(median_all),
+            groupmin_salary50_recent = min(median_recent),
+            groupmax_salary50_all = max(median_all),
+            groupmax_salary50_recent = max(median_recent),
+            groupsd_salary50_all = sd(median_all, na.rm=T),
+            groupsd_salary50_recent = sd(median_recent, na.rm=T),
+            groupprop_recent = sum(total_recent) / (sum(total_recent) + sum(total_all))) %>% 
+  mutate(groupdiff_unemployment = groupmean_unemployment_recent - groupmean_unemployment_all,
+         groupdiff_salary50 = groupmean_salary50_recent - groupmean_salary50_all,
+         group_salary50 = groupprop_recent*groupmean_salary50_recent + (1-groupprop_recent)*groupmean_salary50_all) %>%
+  arrange(-groupdiff_salary50) 
+major_category_data
+```
+Arranging by difference in salary between recent and all graduates, we can see that in every field, recent graduates tend to make less. In fields like Interdisciplinary, Education, and Psychology & Social Work, this difference is diminished. In fields like Engineering and Computers & Mathematics, this difference is more extreme. Furthermore, in every field except for Interdisciplinary, the unemployment rate is higher among recent graduates.
+
+# Plots
+```{r, fig.width=10, fig.height=10} 
+col_names = c("Difference in median salary",
+              "Difference in unemployment rate",
+              "Max median salary (all grads)",
+              "Max median salary (recent grads)",
+              "Mean median salary (all grads)",
+              "Mean median salary (recent grads)",
+              "Mean unemployment rate (all grads)",
+              "Mean unemployment rate (recent grads)",
+              "Min median salary (all grads)",
+              "Min median salary (recent grads)",
+              "Proportion of recent grads in group",
+              "Standard deviation of median salary (all grads)",
+              "Standard deviation of median salary (recent grads)",
+              "Median salary")
+major_category_data %>% 
+  na.omit() %>% 
+  select(-1) %>% 
+  cor() %>% as.data.frame() %>% 
+  rownames_to_column("var1") %>% 
+  pivot_longer(cols=-1, names_to="var2", values_to="correlation") %>% 
+  ggplot(aes(x=var1,y=var2,fill=correlation)) + geom_tile() +
+  scale_fill_gradient2(low="red",mid="white",high="blue") +
+  geom_text(aes(label=round(correlation,2)),color = "black", size = 4) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  coord_fixed() +
+  scale_x_discrete(labels=col_names) +
+  scale_y_discrete(labels=col_names) +
+  labs(title="Correlation plot (variables grouped by major category)",
+       x="",
+       y="") +
+  theme(plot.background = element_rect("bisque"))
+
+  
+```
+
+In this matrix, we can observe the correlation between each pair of numeric variables in the dataset, grouped by major category. Apart from the perfect correlations on the diagonal, the highest correlation between two distinct variables is 0.98, corresponding to mean unemployment rate and difference in median salary between recent and all college graduates. Max median salary among all graduates does not appear to strongly correlate with any other variable in the dataset. Meanwhile, difference in unemployment rate correlates negatively with most other variables, implying that major categories with higher median salaries tend to have lower unemployment as well.
+
+
+```{r, fig.width=10, fig.height=6}
+
+ggplot(college_join, aes(x=prop_recent,y=log(median_recent),color=major_category_all)) +
+  geom_point() +
+  geom_point(data=major_category_data, aes(x=groupprop_recent,
+                                           y=log(group_salary50),
+                                           color=major_category_all),
+             size=5, alpha=0.5) +
+  labs(title="Do major categories differ in income and proportion of recent graduates?",
+       color="Major type",
+       subtitle="Large circles represent group means") +
+  xlab("Proportion of recent grads") + ylab("Log(median income)") +
+  scale_x_continuous(breaks=seq(0,0.55,0.05)) +
+  theme(plot.background = element_rect("bisque"))
+  
+
+theme(panel.background = "burlywood")
+  
+
+```
+In this chart, we can examine the relationship between the proportion of recent graduates in a field and their respective income. These points are colored by major type, as depicted in the legend on the right. Furthermore, group mean values are also shown on this graph in the larger, more transparent points. This plot shows us that Engineering, along with Computers & Mathematics, tend to be the highest paying disciplines. The disciplines with the highest relative proportion of recent graduates are Biology & Life Science and Interdisciplinary. There does not seem to be any correlation between the proportion of recent graduates in a field and how much the field pays. 
+
+```{r, fig.width=10, fig.height=6}
+
+college_join %>% 
+  select(major_category_all, unemployment_rate_all, unemployment_rate_recent, prop_recent) %>% 
+  mutate(unemployment_share_recent = prop_recent*unemployment_rate_recent,
+         unemployment_share_all = (1-prop_recent)*unemployment_rate_all) %>% 
+  select(1,5:6) %>% 
+  rename(c("major_category" = "major_category_all",
+           "Recent grads" = "unemployment_share_recent",
+           "All grads" = "unemployment_share_all")) %>% 
+  pivot_longer(2:3, names_to = "recent_or_all", values_to="unemployment_share") %>% 
+  ggplot(aes(x=reorder(major_category,unemployment_share), y=unemployment_share, fill=recent_or_all)) +
+  geom_bar(position="stack", stat = "summary", fun="mean") + coord_flip() +
+  ylab("Unemployment rate") + xlab("Major category") +
+  ggtitle("Unemployment rate for each major category, split between recent and all college grads") +
+  theme(legend.title = element_blank(),
+        plot.background = element_rect("bisque"))
+
+```
+This chart shows us the total unemployment in each field, divided between recent and all graduates. We can see that overall, Interdisciplinary, Arts, and Social Science have the highest rates of unemployment, while Health, Agriculture, and Education have the lowest rates. Furthermore, Biology and Life Sciences appears to have the highest share of its unemployment from recent graduates. This is explained by the high proportion of recent graduates in this field, as shown in the previous scatterplot.
+
+# Clustering
+In this section, we will use the recent college graduates dataset rather than using the joined dataset. The recent graduates dataset contains features that were not examined in the previous section, such as the proportion of women in a major. We will look just at total number of people in the major, the share of women in the major, the median income, and the unemployment rate. 
+```{r}
+library(cluster)
+
+clust_data <- college_recent_grads %>%  
+  select(major,major_category, total, sharewomen, median, unemployment_rate) %>% 
+  mutate(total_log = log(total),
+         median_log = log(median)) %>% 
+  na.omit 
+
+# Pull out information about major and major categories, to be used later
+majors <- clust_data %>% 
+  select(major,major_category)
+
+clust_data <- clust_data %>% 
+  select(4,6:8)
+clust_data %>%  glimpse
+
+# Plot mean silhouette width for different numbers of clusters
+sil_width<-vector() 
+for(i in 2:10){
+  pam_fit  <-  pam(clust_data,  k =  i)
+  sil_width[i]  <-  pam_fit$silinfo$avg.width 
+}
+ggplot()+geom_line(aes(x=1:10,y=sil_width))+scale_x_continuous(name="k",breaks=1:10)
+```
+From the chart of silhouette widths versus number of clusters, we can determine that the best silhouette width occurs with 2 clusters, corresponding to a value of 0.52. This indicates that a reasonable structure has been found. 
+
+```{r, fig.width=10, fig.height=6}
+pam_data <- pam(clust_data, k=2)
+clust_data_plot <- clust_data %>% 
+  mutate(cluster = pam_data$clustering,
+         major = majors$major,
+         major_category = majors$major_category)
+
+clust_data_plot %>% 
+  ggplot() +
+  geom_point(aes(x=total_log,y=unemployment_rate,color=major_category, shape=as.factor(cluster))) +
+  labs(title="Unemployment rate vs number of people in field",
+       color="Major type",
+       shape="Cluster",
+       x="Log(total number of people in field)",
+       y="Unemployment rate")
+
+
+
+```
+Though the clusters aren't completely separable, there does appear to be a structure. Majors in cluster 2 tend to have more people in their respective fields than those in cluster 1. Furthermore, no overall trend is visible between number of people in a field versus unemployment rate in said field. However, the variance in unemployment rate does decrease as the number of people in the field increases, likely due to sampling variation effects due to sample size.
+
+```{r}
+# Majors in cluster 1
+clust_data_plot %>% 
+  filter(cluster==1) %>% 
+  group_by(major_category) %>% 
+  summarize(num = n()) %>% 
+  arrange(-num)
+
+# Majors in cluster 2
+clust_data_plot %>% 
+  filter(cluster==2) %>% 
+  group_by(major_category) %>% 
+  summarize(num = n()) %>% 
+  arrange(-num)
+
+# Summary statistics for each cluster
+clust_data_plot %>% 
+  group_by(as.factor(cluster)) %>% 
+  summarize(mean(sharewomen),
+            mean(total_log),
+            mean(median_log),
+            mean(unemployment_rate))
+```
+Cluster 1 appears to consist more of STEM majors, such as Engineering, Computers & Mathematics, and Physical Sciences. Cluster 2, on the other hand, appears to consist more of liberal arts majors, such as Humanities, Business, and Education.
+
+Fields in cluster 2 tend to have a higher mean number of people, as was seen in the graph above. Majors in cluster 2 also tends to have more women, a slightly lower pay, and a slightly higher unemployment rate than majors in cluster 1.

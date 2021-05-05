@@ -1,0 +1,17 @@
++++
+title = ""
+description = ""
+tags = []
+categories = []
++++
+
+hey what's up
+
+[Link to project 1](/project/project1/)
+
+[Link to google](https://www.google.com)
+
+```{r}
+2+2
+```
+![](/post/2021-05-05-test_files/IMG_0296.HEIC)

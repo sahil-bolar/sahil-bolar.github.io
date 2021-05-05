@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Sahil Bolar" />
+    
+    <link rel="shortcut icon" type="image/x-icon" href="../../img/favicon.ico">
+    <title>Project1</title>
+    <meta name="generator" content="Hugo 0.83.1" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../../css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,200bold,400old" />
+    
+    <!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+
+    
+  </head>
+
+  <body>
+    <div id="wrap">
+      
+      <nav class="navbar navbar-default">
+  <div class="container">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="../../"><i class="fa fa-home"></i></a>
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <div class="navbar-collapse collapse" id="navbar">
+      <ul class="nav navbar-nav navbar-right">
+      
+        
+        <li><a href="../../post/">BLOG</a></li>
+        
+        <li><a href="../../projects/">PROJECTS</a></li>
+        
+        <li><a href="../../resume/">RESUME</a></li>
+        
+      
+      </ul>
+    </div>
+  </div>
+</nav>
+
+      <div class="container">
+        <div class="blog-post">
+          <h3>
+            <strong><a href="../../project/project1/">Project1</a></strong>
+          </h3>
+        </div>
+ 
+<div class="blog-title">
+          <h4>
+         January 1, 0001 
+            &nbsp;&nbsp;
+            
+          </h4>
+        </div>
+
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <div class="blogpost">
+              
+
+
+<div id="project-1" class="section level2">
+<h2>Project 1</h2>
+</div>
+<div id="sahil-bolar" class="section level1">
+<h1>Sahil Bolar</h1>
+</div>
+<div id="ssb2747" class="section level1">
+<h1>ssb2747</h1>
+</div>
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>This project contains two datasets from FiveThirtyEight with data on major, salary, employment, and other pertinent information about the job market. One dataset contains information on all college graduates, while the other contains information only on recent graduates. I am interested in seeing whether and to what extent the job market differs for recent graduates vs the overall workforce, controlling for major choice. Furthermore, I’m interested in looking into which majors and major categories are more/less popular among recent graduates than among the overall workforce.</p>
+<pre class="r"><code>library(fivethirtyeight)
+library(tidyverse)
+college_all_ages %&gt;% glimpse</code></pre>
+<pre><code>## Rows: 173
+## Columns: 11
+## $ major_code                  &lt;int&gt; 1100, 1101, 1102, 1103, 1104, 1105, 1106,…
+## $ major                       &lt;chr&gt; &quot;General Agriculture&quot;, &quot;Agriculture Produ…
+## $ major_category              &lt;chr&gt; &quot;Agriculture &amp; Natural Resources&quot;, &quot;Agric…
+## $ total                       &lt;int&gt; 128148, 95326, 33955, 103549, 24280, 7940…
+## $ employed                    &lt;int&gt; 90245, 76865, 26321, 81177, 17281, 63043,…
+## $ employed_fulltime_yearround &lt;int&gt; 74078, 64240, 22810, 64937, 12722, 51077,…
+## $ unemployed                  &lt;int&gt; 2423, 2266, 821, 3619, 894, 2070, 264, 26…
+## $ unemployment_rate           &lt;dbl&gt; 0.02614711, 0.02863606, 0.03024832, 0.042…
+## $ p25th                       &lt;dbl&gt; 34000, 36000, 40000, 30000, 38500, 35000,…
+## $ median                      &lt;dbl&gt; 50000, 54000, 63000, 46000, 62000, 50000,…
+## $ p75th                       &lt;dbl&gt; 80000, 80000, 98000, 72000, 90000, 75000,…</code></pre>
+<pre class="r"><code>college_recent_grads %&gt;% glimpse</code></pre>
+<pre><code>## Rows: 173
+## Columns: 21
+## $ rank                        &lt;int&gt; 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13…
+## $ major_code                  &lt;int&gt; 2419, 2416, 2415, 2417, 2405, 2418, 6202,…
+## $ major                       &lt;chr&gt; &quot;Petroleum Engineering&quot;, &quot;Mining And Mine…
+## $ major_category              &lt;chr&gt; &quot;Engineering&quot;, &quot;Engineering&quot;, &quot;Engineerin…
+## $ total                       &lt;int&gt; 2339, 756, 856, 1258, 32260, 2573, 3777, …
+## $ sample_size                 &lt;int&gt; 36, 7, 3, 16, 289, 17, 51, 10, 1029, 631,…
+## $ men                         &lt;int&gt; 2057, 679, 725, 1123, 21239, 2200, 2110, …
+## $ women                       &lt;int&gt; 282, 77, 131, 135, 11021, 373, 1667, 960,…
+## $ sharewomen                  &lt;dbl&gt; 0.1205643, 0.1018519, 0.1530374, 0.107313…
+## $ employed                    &lt;int&gt; 1976, 640, 648, 758, 25694, 1857, 2912, 1…
+## $ employed_fulltime           &lt;int&gt; 1849, 556, 558, 1069, 23170, 2038, 2924, …
+## $ employed_parttime           &lt;int&gt; 270, 170, 133, 150, 5180, 264, 296, 553, …
+## $ employed_fulltime_yearround &lt;int&gt; 1207, 388, 340, 692, 16697, 1449, 2482, 8…
+## $ unemployed                  &lt;int&gt; 37, 85, 16, 40, 1672, 400, 308, 33, 4650,…
+## $ unemployment_rate           &lt;dbl&gt; 0.018380527, 0.117241379, 0.024096386, 0.…
+## $ p25th                       &lt;dbl&gt; 95000, 55000, 50000, 43000, 50000, 50000,…
+## $ median                      &lt;dbl&gt; 110000, 75000, 73000, 70000, 65000, 65000…
+## $ p75th                       &lt;dbl&gt; 125000, 90000, 105000, 80000, 75000, 1020…
+## $ college_jobs                &lt;int&gt; 1534, 350, 456, 529, 18314, 1142, 1768, 9…
+## $ non_college_jobs            &lt;int&gt; 364, 257, 176, 102, 4440, 657, 314, 500, …
+## $ low_wage_jobs               &lt;int&gt; 193, 50, 0, 0, 972, 244, 259, 220, 3253, …</code></pre>
+</div>
+<div id="data-wrangling" class="section level1">
+<h1>Data Wrangling</h1>
+<p>We will join both datasets by major. Both of these datasets contain exactly the same majors, so we will use a full join. There are no majors exclusive to any one of these datasets, so no information will be lost. The columns common to both datasets will be suffixes by either "_all" or "_recent", depending on which dataset it comes from. There are a few variable (e.g. sharewomen) that are present only in the recent graduates dataset.</p>
+<pre class="r"><code>college_join &lt;- full_join(college_all_ages, college_recent_grads, 
+    by = c(major_code = &quot;major_code&quot;), suffix = c(&quot;_all&quot;, &quot;_recent&quot;))
+college_join %&gt;% glimpse</code></pre>
+<pre><code>## Rows: 173
+## Columns: 31
+## $ major_code                         &lt;int&gt; 1100, 1101, 1102, 1103, 1104, 1105…
+## $ major_all                          &lt;chr&gt; &quot;General Agriculture&quot;, &quot;Agricultur…
+## $ major_category_all                 &lt;chr&gt; &quot;Agriculture &amp; Natural Resources&quot;,…
+## $ total_all                          &lt;int&gt; 128148, 95326, 33955, 103549, 2428…
+## $ employed_all                       &lt;int&gt; 90245, 76865, 26321, 81177, 17281,…
+## $ employed_fulltime_yearround_all    &lt;int&gt; 74078, 64240, 22810, 64937, 12722,…
+## $ unemployed_all                     &lt;int&gt; 2423, 2266, 821, 3619, 894, 2070, …
+## $ unemployment_rate_all              &lt;dbl&gt; 0.02614711, 0.02863606, 0.03024832…
+## $ p25th_all                          &lt;dbl&gt; 34000, 36000, 40000, 30000, 38500,…
+## $ median_all                         &lt;dbl&gt; 50000, 54000, 63000, 46000, 62000,…
+## $ p75th_all                          &lt;dbl&gt; 80000, 80000, 98000, 72000, 90000,…
+## $ rank                               &lt;int&gt; 65, 64, 72, 153, 22, 144, 113, 162…
+## $ major_recent                       &lt;chr&gt; &quot;General Agriculture&quot;, &quot;Agricultur…
+## $ major_category_recent              &lt;chr&gt; &quot;Agriculture &amp; Natural Resources&quot;,…
+## $ total_recent                       &lt;int&gt; 10399, 14240, 2439, 21573, NA, 741…
+## $ sample_size                        &lt;int&gt; 158, 273, 44, 255, 36, 110, 4, 24,…
+## $ men                                &lt;int&gt; 6053, 9658, 1749, 5347, NA, 4897, …
+## $ women                              &lt;int&gt; 4346, 4582, 690, 16226, NA, 2519, …
+## $ sharewomen                         &lt;dbl&gt; 0.4179248, 0.3217697, 0.2829028, 0…
+## $ employed_recent                    &lt;int&gt; 8884, 12323, 2174, 17112, 3149, 65…
+## $ employed_fulltime                  &lt;int&gt; 7589, 11119, 1819, 14479, 2558, 57…
+## $ employed_parttime                  &lt;int&gt; 2031, 2196, 620, 5353, 1121, 1246,…
+## $ employed_fulltime_yearround_recent &lt;int&gt; 5888, 9093, 1528, 10824, 1735, 452…
+## $ unemployed_recent                  &lt;int&gt; 178, 649, 182, 917, 338, 314, 0, 8…
+## $ unemployment_rate_recent           &lt;dbl&gt; 0.01964246, 0.05003084, 0.07724958…
+## $ p25th_recent                       &lt;dbl&gt; 30000, 25000, 27000, 22000, 32000,…
+## $ median_recent                      &lt;dbl&gt; 40000, 40000, 40000, 30000, 53000,…
+## $ p75th_recent                       &lt;dbl&gt; 50000, 50000, 54000, 40000, 70000,…
+## $ college_jobs                       &lt;int&gt; 2418, 1925, 535, 5443, 1183, 2089,…
+## $ non_college_jobs                   &lt;int&gt; 4717, 6221, 893, 9571, 1274, 3545,…
+## $ low_wage_jobs                      &lt;int&gt; 839, 1362, 94, 2125, 485, 1231, 0,…</code></pre>
+<p>Let’s select only those variables that appear in both datasets and remove rows with NA in the total population variable. Then we can examine some overall summary statistics.</p>
+<pre class="r"><code>college_join &lt;- college_join %&gt;% select(contains(&quot;_all&quot;) | contains(&quot;_recent&quot;)) %&gt;% 
+    filter(!is.na(total_all) &amp; !is.na(total_recent)) %&gt;% mutate(prop_recent = total_recent/(total_recent + 
+    total_all))
+college_join %&gt;% summarize(mean(unemployment_rate_all), mean(unemployment_rate_recent), 
+    mean(median_all), mean(median_recent))</code></pre>
+<pre><code>## # A tibble: 1 x 4
+##   `mean(unemployment_… `mean(unemployment_r… `mean(median_all… `mean(median_rec…
+##                  &lt;dbl&gt;                 &lt;dbl&gt;             &lt;dbl&gt;             &lt;dbl&gt;
+## 1               0.0574                0.0680            56786.            40077.</code></pre>
+<p>As we expect, the median income is lower among recent graduates than among all graduates by about $1.6710^{4}. The unemployment rate is also higher among recent graduates by about 0.011 percentage points.</p>
+<p>Let’s examine some summary statistics again, but this time group it by the major category (e.g. Engineering, Business, etc.). We create several summary statistics for each major category and type (i.e. recent graduate), including the mean unemployment, mean median salary (i.e. for a particular major category, what is the average of each major’s median salary), minimum median salary, maximum median salary, standard deviation of median salary and proportion of the group that contains recent graduates. We can create new variables from this data examining the difference in unemployment and median salary between recent and all graduates, and also the average overall median salary for a group.</p>
+<pre class="r"><code>major_category_data &lt;- college_join %&gt;% select(contains(&quot;_all&quot;) | 
+    contains(&quot;_recent&quot;)) %&gt;% na.omit() %&gt;% group_by(major_category_all) %&gt;% 
+    summarize(groupmean_unemployment_all = weighted.mean(unemployment_rate_all, 
+        total_all), groupmean_unemployment_recent = weighted.mean(unemployment_rate_recent, 
+        total_recent), groupmean_salary50_all = weighted.mean(median_all, 
+        total_all), groupmean_salary50_recent = weighted.mean(median_recent, 
+        total_recent), groupmin_salary50_all = min(median_all), 
+        groupmin_salary50_recent = min(median_recent), groupmax_salary50_all = max(median_all), 
+        groupmax_salary50_recent = max(median_recent), groupsd_salary50_all = sd(median_all, 
+            na.rm = T), groupsd_salary50_recent = sd(median_recent, 
+            na.rm = T), groupprop_recent = sum(total_recent)/(sum(total_recent) + 
+            sum(total_all))) %&gt;% mutate(groupdiff_unemployment = groupmean_unemployment_recent - 
+    groupmean_unemployment_all, groupdiff_salary50 = groupmean_salary50_recent - 
+    groupmean_salary50_all, group_salary50 = groupprop_recent * 
+    groupmean_salary50_recent + (1 - groupprop_recent) * groupmean_salary50_all) %&gt;% 
+    arrange(-groupdiff_salary50)
+major_category_data</code></pre>
+<pre><code>## # A tibble: 16 x 15
+##    major_category_… groupmean_unemp… groupmean_unemp… groupmean_salar…
+##    &lt;chr&gt;                       &lt;dbl&gt;            &lt;dbl&gt;            &lt;dbl&gt;
+##  1 Interdisciplina…           0.0773           0.0709           43000 
+##  2 Education                  0.0423           0.0496           42519.
+##  3 Psychology &amp; So…           0.0687           0.0806           43985.
+##  4 Arts                       0.0732           0.0891           44820.
+##  5 Industrial Arts…           0.0514           0.0574           47313.
+##  6 Law &amp; Public Po…           0.0567           0.0852           50378.
+##  7 Communications …           0.0663           0.0751           49766.
+##  8 Humanities &amp; Li…           0.0669           0.0861           48070.
+##  9 Biology &amp; Life …           0.0572           0.0702           51420.
+## 10 Agriculture &amp; N…           0.0365           0.0515           52028.
+## 11 Social Science             0.0659           0.0969           57105.
+## 12 Business                   0.0546           0.0684           60037.
+## 13 Physical Scienc…           0.0514           0.0536           59791.
+## 14 Health                     0.0332           0.0569           61820.
+## 15 Engineering                0.0526           0.0664           77930.
+## 16 Computers &amp; Mat…           0.0536           0.0711           70205.
+## # … with 11 more variables: groupmean_salary50_recent &lt;dbl&gt;,
+## #   groupmin_salary50_all &lt;dbl&gt;, groupmin_salary50_recent &lt;dbl&gt;,
+## #   groupmax_salary50_all &lt;dbl&gt;, groupmax_salary50_recent &lt;dbl&gt;,
+## #   groupsd_salary50_all &lt;dbl&gt;, groupsd_salary50_recent &lt;dbl&gt;,
+## #   groupprop_recent &lt;dbl&gt;, groupdiff_unemployment &lt;dbl&gt;,
+## #   groupdiff_salary50 &lt;dbl&gt;, group_salary50 &lt;dbl&gt;</code></pre>
+<p>Arranging by difference in salary between recent and all graduates, we can see that in every field, recent graduates tend to make less. In fields like Interdisciplinary, Education, and Psychology &amp; Social Work, this difference is diminished. In fields like Engineering and Computers &amp; Mathematics, this difference is more extreme. Furthermore, in every field except for Interdisciplinary, the unemployment rate is higher among recent graduates.</p>
+</div>
+<div id="plots" class="section level1">
+<h1>Plots</h1>
+<pre class="r"><code>col_names = c(&quot;Difference in median salary&quot;, &quot;Difference in unemployment rate&quot;, 
+    &quot;Max median salary (all grads)&quot;, &quot;Max median salary (recent grads)&quot;, 
+    &quot;Mean median salary (all grads)&quot;, &quot;Mean median salary (recent grads)&quot;, 
+    &quot;Mean unemployment rate (all grads)&quot;, &quot;Mean unemployment rate (recent grads)&quot;, 
+    &quot;Min median salary (all grads)&quot;, &quot;Min median salary (recent grads)&quot;, 
+    &quot;Proportion of recent grads in group&quot;, &quot;Standard deviation of median salary (all grads)&quot;, 
+    &quot;Standard deviation of median salary (recent grads)&quot;, &quot;Median salary&quot;)
+major_category_data %&gt;% na.omit() %&gt;% select(-1) %&gt;% cor() %&gt;% 
+    as.data.frame() %&gt;% rownames_to_column(&quot;var1&quot;) %&gt;% pivot_longer(cols = -1, 
+    names_to = &quot;var2&quot;, values_to = &quot;correlation&quot;) %&gt;% ggplot(aes(x = var1, 
+    y = var2, fill = correlation)) + geom_tile() + scale_fill_gradient2(low = &quot;red&quot;, 
+    mid = &quot;white&quot;, high = &quot;blue&quot;) + geom_text(aes(label = round(correlation, 
+    2)), color = &quot;black&quot;, size = 4) + theme(axis.text.x = element_text(angle = 90, 
+    hjust = 1)) + coord_fixed() + scale_x_discrete(labels = col_names) + 
+    scale_y_discrete(labels = col_names) + labs(title = &quot;Correlation plot (variables grouped by major category)&quot;, 
+    x = &quot;&quot;, y = &quot;&quot;) + theme(plot.background = element_rect(&quot;bisque&quot;))</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-5-1.png" width="960" style="display: block; margin: auto;" /></p>
+<p>In this matrix, we can observe the correlation between each pair of numeric variables in the dataset, grouped by major category. Apart from the perfect correlations on the diagonal, the highest correlation between two distinct variables is 0.98, corresponding to mean unemployment rate and difference in median salary between recent and all college graduates. Max median salary among all graduates does not appear to strongly correlate with any other variable in the dataset. Meanwhile, difference in unemployment rate correlates negatively with most other variables, implying that major categories with higher median salaries tend to have lower unemployment as well.</p>
+<pre class="r"><code>ggplot(college_join, aes(x = prop_recent, y = log(median_recent), 
+    color = major_category_all)) + geom_point() + geom_point(data = major_category_data, 
+    aes(x = groupprop_recent, y = log(group_salary50), color = major_category_all), 
+    size = 5, alpha = 0.5) + labs(title = &quot;Do major categories differ in income and proportion of recent graduates?&quot;, 
+    color = &quot;Major type&quot;, subtitle = &quot;Large circles represent group means&quot;) + 
+    xlab(&quot;Proportion of recent grads&quot;) + ylab(&quot;Log(median income)&quot;) + 
+    scale_x_continuous(breaks = seq(0, 0.55, 0.05)) + theme(plot.background = element_rect(&quot;bisque&quot;))</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-6-1.png" width="960" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>theme(panel.background = &quot;burlywood&quot;)</code></pre>
+<pre><code>## List of 1
+##  $ panel.background: chr &quot;burlywood&quot;
+##  - attr(*, &quot;class&quot;)= chr [1:2] &quot;theme&quot; &quot;gg&quot;
+##  - attr(*, &quot;complete&quot;)= logi FALSE
+##  - attr(*, &quot;validate&quot;)= logi TRUE</code></pre>
+<p>In this chart, we can examine the relationship between the proportion of recent graduates in a field and their respective income. These points are colored by major type, as depicted in the legend on the right. Furthermore, group mean values are also shown on this graph in the larger, more transparent points. This plot shows us that Engineering, along with Computers &amp; Mathematics, tend to be the highest paying disciplines. The disciplines with the highest relative proportion of recent graduates are Biology &amp; Life Science and Interdisciplinary. There does not seem to be any correlation between the proportion of recent graduates in a field and how much the field pays.</p>
+<pre class="r"><code>college_join %&gt;% select(major_category_all, unemployment_rate_all, 
+    unemployment_rate_recent, prop_recent) %&gt;% mutate(unemployment_share_recent = prop_recent * 
+    unemployment_rate_recent, unemployment_share_all = (1 - prop_recent) * 
+    unemployment_rate_all) %&gt;% select(1, 5:6) %&gt;% rename(c(major_category = &quot;major_category_all&quot;, 
+    `Recent grads` = &quot;unemployment_share_recent&quot;, `All grads` = &quot;unemployment_share_all&quot;)) %&gt;% 
+    pivot_longer(2:3, names_to = &quot;recent_or_all&quot;, values_to = &quot;unemployment_share&quot;) %&gt;% 
+    ggplot(aes(x = reorder(major_category, unemployment_share), 
+        y = unemployment_share, fill = recent_or_all)) + geom_bar(position = &quot;stack&quot;, 
+    stat = &quot;summary&quot;, fun = &quot;mean&quot;) + coord_flip() + ylab(&quot;Unemployment rate&quot;) + 
+    xlab(&quot;Major category&quot;) + ggtitle(&quot;Unemployment rate for each major category, split between recent and all college grads&quot;) + 
+    theme(legend.title = element_blank(), plot.background = element_rect(&quot;bisque&quot;))</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-7-1.png" width="960" style="display: block; margin: auto;" />
+This chart shows us the total unemployment in each field, divided between recent and all graduates. We can see that overall, Interdisciplinary, Arts, and Social Science have the highest rates of unemployment, while Health, Agriculture, and Education have the lowest rates. Furthermore, Biology and Life Sciences appears to have the highest share of its unemployment from recent graduates. This is explained by the high proportion of recent graduates in this field, as shown in the previous scatterplot.</p>
+</div>
+<div id="clustering" class="section level1">
+<h1>Clustering</h1>
+<p>In this section, we will use the recent college graduates dataset rather than using the joined dataset. The recent graduates dataset contains features that were not examined in the previous section, such as the proportion of women in a major. We will look just at total number of people in the major, the share of women in the major, the median income, and the unemployment rate.</p>
+<pre class="r"><code>library(cluster)
+
+clust_data &lt;- college_recent_grads %&gt;% select(major, major_category, 
+    total, sharewomen, median, unemployment_rate) %&gt;% mutate(total_log = log(total), 
+    median_log = log(median)) %&gt;% na.omit
+
+# Pull out information about major and major categories, to
+# be used later
+majors &lt;- clust_data %&gt;% select(major, major_category)
+
+clust_data &lt;- clust_data %&gt;% select(4, 6:8)
+clust_data %&gt;% glimpse</code></pre>
+<pre><code>## Rows: 172
+## Columns: 4
+## $ sharewomen        &lt;dbl&gt; 0.12056434, 0.10185185, 0.15303738, 0.10731320, 0.3…
+## $ unemployment_rate &lt;dbl&gt; 0.018380527, 0.117241379, 0.024096386, 0.050125313,…
+## $ total_log         &lt;dbl&gt; 7.757479, 6.628041, 6.752270, 7.137278, 10.381583, …
+## $ median_log        &lt;dbl&gt; 11.60824, 11.22524, 11.19821, 11.15625, 11.08214, 1…</code></pre>
+<pre class="r"><code># Plot mean silhouette width for different numbers of
+# clusters
+sil_width &lt;- vector()
+for (i in 2:10) {
+    pam_fit &lt;- pam(clust_data, k = i)
+    sil_width[i] &lt;- pam_fit$silinfo$avg.width
+}
+ggplot() + geom_line(aes(x = 1:10, y = sil_width)) + scale_x_continuous(name = &quot;k&quot;, 
+    breaks = 1:10)</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" />
+From the chart of silhouette widths versus number of clusters, we can determine that the best silhouette width occurs with 2 clusters, corresponding to a value of 0.52. This indicates that a reasonable structure has been found.</p>
+<pre class="r"><code>pam_data &lt;- pam(clust_data, k = 2)
+clust_data_plot &lt;- clust_data %&gt;% mutate(cluster = pam_data$clustering, 
+    major = majors$major, major_category = majors$major_category)
+
+clust_data_plot %&gt;% ggplot() + geom_point(aes(x = total_log, 
+    y = unemployment_rate, color = major_category, shape = as.factor(cluster))) + 
+    labs(title = &quot;Unemployment rate vs number of people in field&quot;, 
+        color = &quot;Major type&quot;, shape = &quot;Cluster&quot;, x = &quot;Log(total number of people in field)&quot;, 
+        y = &quot;Unemployment rate&quot;)</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-9-1.png" width="960" style="display: block; margin: auto;" />
+Though the clusters aren’t completely separable, there does appear to be a structure. Majors in cluster 2 tend to have more people in their respective fields than those in cluster 1. Furthermore, no overall trend is visible between number of people in a field versus unemployment rate in said field. However, the variance in unemployment rate does decrease as the number of people in the field increases, likely due to sampling variation effects due to sample size.</p>
+<pre class="r"><code># Majors in cluster 1
+clust_data_plot %&gt;% filter(cluster == 1) %&gt;% group_by(major_category) %&gt;% 
+    summarize(num = n()) %&gt;% arrange(-num)</code></pre>
+<pre><code>## # A tibble: 13 x 2
+##    major_category                        num
+##    &lt;chr&gt;                               &lt;int&gt;
+##  1 Engineering                            18
+##  2 Computers &amp; Mathematics                 6
+##  3 Physical Sciences                       6
+##  4 Agriculture &amp; Natural Resources         5
+##  5 Biology &amp; Life Science                  5
+##  6 Psychology &amp; Social Work                5
+##  7 Education                               4
+##  8 Law &amp; Public Policy                     3
+##  9 Humanities &amp; Liberal Arts               2
+## 10 Industrial Arts &amp; Consumer Services     2
+## 11 Arts                                    1
+## 12 Business                                1
+## 13 Social Science                          1</code></pre>
+<pre class="r"><code># Majors in cluster 2
+clust_data_plot %&gt;% filter(cluster == 2) %&gt;% group_by(major_category) %&gt;% 
+    summarize(num = n()) %&gt;% arrange(-num)</code></pre>
+<pre><code>## # A tibble: 16 x 2
+##    major_category                        num
+##    &lt;chr&gt;                               &lt;int&gt;
+##  1 Humanities &amp; Liberal Arts              13
+##  2 Business                               12
+##  3 Education                              12
+##  4 Health                                 12
+##  5 Engineering                            11
+##  6 Biology &amp; Life Science                  9
+##  7 Social Science                          8
+##  8 Arts                                    7
+##  9 Computers &amp; Mathematics                 5
+## 10 Industrial Arts &amp; Consumer Services     5
+## 11 Agriculture &amp; Natural Resources         4
+## 12 Communications &amp; Journalism             4
+## 13 Physical Sciences                       4
+## 14 Psychology &amp; Social Work                4
+## 15 Law &amp; Public Policy                     2
+## 16 Interdisciplinary                       1</code></pre>
+<pre class="r"><code># Summary statistics for each cluster
+clust_data_plot %&gt;% group_by(as.factor(cluster)) %&gt;% summarize(mean(sharewomen), 
+    mean(total_log), mean(median_log), mean(unemployment_rate))</code></pre>
+<pre><code>## # A tibble: 2 x 5
+##   `as.factor(clus… `mean(sharewome… `mean(total_log… `mean(median_lo…
+##   &lt;fct&gt;                       &lt;dbl&gt;            &lt;dbl&gt;            &lt;dbl&gt;
+## 1 1                           0.418             7.90             10.7
+## 2 2                           0.577            10.4              10.5
+## # … with 1 more variable: `mean(unemployment_rate)` &lt;dbl&gt;</code></pre>
+<p>Cluster 1 appears to consist more of STEM majors, such as Engineering, Computers &amp; Mathematics, and Physical Sciences. Cluster 2, on the other hand, appears to consist more of liberal arts majors, such as Humanities, Business, and Education.</p>
+<p>Fields in cluster 2 tend to have a higher mean number of people, as was seen in the graph above. Majors in cluster 2 also tends to have more women, a slightly lower pay, and a slightly higher unemployment rate than majors in cluster 1.</p>
+</div>
+
+            
+        <hr>         <div class="related-posts">
+                <h5>Related Posts</h5>
+                
+              </div> 
+            </div>
+          </div>
+
+   <hr>  <div class="disqus">
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+
+    (function() {
+      
+      
+      if (window.location.hostname == "localhost")
+        return;
+
+      var disqus_shortname = '';
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  <a href="http://disqus.com/" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div> 
+        </div>
+      </div>
+    </div>
+
+    
+    <footer>
+  <div id="footer">
+    <div class="container">
+      <p class="text-muted">&copy; All rights reserved. Powered by <a href="https://gohugo.io/">Hugo</a> and
+      <a href="http://www.github.com/nurlansu/hugo-sustain/">sustain</a> with ♥</p>
+    </div>
+  </div>
+</footer>
+<div class="footer"></div>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="../../js/docs.min.js"></script>
+<script src="../../js/main.js"></script>
+
+<script src="../../js/ie10-viewport-bug-workaround.js"></script>
+
+
+    
+  </body>
+</html>
