@@ -1,8 +1,302 @@
 ---
-title: "Project 2"
-author: "Me"
-date: "2020-12-01"
+title: "Project2"
+author: "Sahil Bolar"
+date: "5/5/2021"
 output: html_document
 ---
 
-## Test Project 2
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(fivethirtyeight)
+library(interactions)
+library(lmtest)
+library(sandwich)
+library(plotROC)
+library(glmnet)
+
+class_diag<-function(probs,truth){
+  
+  tab<-table(factor(probs>.5,levels=c("FALSE","TRUE")),truth)
+  acc=sum(diag(tab))/sum(tab)
+  sens=tab[2,2]/colSums(tab)[2]
+  spec=tab[1,1]/colSums(tab)[1]
+  ppv=tab[2,2]/rowSums(tab)[2]
+  
+  if(is.numeric(truth)==FALSE & is.logical(truth)==FALSE) truth<-as.numeric(truth)-1
+  
+  #CALCULATE EXACT AUC
+  ord<-order(probs, decreasing=TRUE)
+  probs <- probs[ord]; truth <- truth[ord]
+  
+  TPR=cumsum(truth)/max(1,sum(truth)) 
+  FPR=cumsum(!truth)/max(1,sum(!truth))
+  
+  dup<-c(probs[-1]>=probs[-length(probs)], FALSE)
+  TPR<-c(0,TPR[!dup],1); FPR<-c(0,FPR[!dup],1)
+  
+  n <- length(TPR)
+  auc<- sum( ((TPR[-1]+TPR[-n])/2) * (FPR[-1]-FPR[-n]) )
+  
+  data.frame(acc,sens,spec,ppv,auc)
+}
+```
+
+## Project 2
+## Sahil Bolar, ssb2747
+
+
+## Introduction
+```{r}
+hate_crimes %>% glimpse
+```
+This dataset is from fivethirtyeight.com and entails the level of hate crimes across all 50 states in the US and Washington DC. Some variables in this dataset include median household income, share of unemployment (seasonally adjusted), gini index (a measure of income inequality), and hate crimes per 100,000 people.  
+
+## MANOVA, ANOVA, Pairwise t-test
+```{r}
+# Create categorical variable of median household income quartile
+inc_quartiles <- quantile(hate_crimes$median_house_inc, c(0.25,0.5,0.75))
+inc_25 <- inc_quartiles[1]
+inc_50 <- inc_quartiles[2]
+inc_75 <- inc_quartiles[3]
+hate_crimes <- hate_crimes %>% 
+  mutate(house_inc_quartile = ifelse(
+    median_house_inc < inc_25, 1, ifelse(
+      median_house_inc < inc_50, 2, ifelse(
+        median_house_inc < inc_75, 3, 4)
+      )
+    )
+  )
+# MANOVA
+summary(manova(cbind(share_pop_hs, share_pop_metro, avg_hatecrimes_per_100k_fbi)~house_inc_quartile,data=hate_crimes))
+```
+This MANOVA test suggests that there is a mean difference across quartiles of median household income in at least one of the reponse variables.
+```{r}
+# ANOVA
+summary(aov(share_pop_hs~house_inc_quartile, data=hate_crimes)) # significant
+summary(aov(share_pop_metro~house_inc_quartile, data=hate_crimes)) # not significant
+summary(aov(avg_hatecrimes_per_100k_fbi~house_inc_quartile, data=hate_crimes)) # significant
+```
+The ANOVA tests suggest that the share of high school educated population in a state significantly varies across difference income quartiles, as does the average amount of hate crimes per 100,000 people. However, the share of a state's population living in metro areas does not significantly differ across different household income quartiles. 
+```{r}
+# Pairwise t-tests
+pairwise.t.test(hate_crimes$share_pop_hs, hate_crimes$house_inc_quartile, p.adj = "none")
+pairwise.t.test(hate_crimes$share_pop_metro, hate_crimes$house_inc_quartile, p.adj = "none")
+pairwise.t.test(hate_crimes$avg_hatecrimes_per_100k_fbi, hate_crimes$house_inc_quartile, p.adj = "none")
+
+```
+In total, we have conducted 22 tests. The probability of at least one type I error is `r 1-(0.95)^22` and the bonferroni-adjusted significance level is `r 0.05/22`. 
+After using this corrected alpha, we find that there is a significant difference between share of high school educated population between the lowest quartile and every other quartile, as well as between the 2nd lowest quartile and the highest quartile. There are no significant difference between any income quartile in share of metropolitan population. Finally, there is a significant difference in average hate crimes per 100,000 citizens between the lowest income quartile and the highest income quartile.
+To use the MANOVA test, we must assume random samples and independent observations, along with multivariate normality of dependent variables and other assumptions. It is unlikely that our data meets this assumption of multivariate normality.
+
+## Randomization test
+```{r}
+hate_crimes_dropna <- hate_crimes %>% 
+  select(share_non_white, avg_hatecrimes_per_100k_fbi) %>% 
+  na.omit 
+
+cor_rand <- vector()
+for (i in 1:5000){
+  new <- data.frame(nonwhite=hate_crimes_dropna$share_non_white,
+                    avg_hatecrimes=sample(hate_crimes_dropna$avg_hatecrimes_per_100k_fbi))
+  cor_rand[i] <- cor(new$nonwhite, new$avg_hatecrimes)
+}
+cor_statistic <- cor(hate_crimes_dropna$share_non_white, hate_crimes_dropna$avg_hatecrimes_per_100k_fbi)
+p <- 2 * mean(cor_rand > cor_statistic)
+ggplot() + geom_histogram(aes(cor_rand)) + geom_vline(xintercept=cor_statistic, col="red") + ggtitle("Null distribution of correlation values") 
+```
+
+Our null hypothesis is that the correlation between share of non white residents in a state and average hate crimes does not significantly differ from the distribution of correlations obtained from randomizing the data. The alternative hypothesis is that this correlation does significantly differ from the null distribution of randomized data. From our randomization test, we conclude that there is not a significant difference between our correlation statistic from the original data and the randomized distribution (p=`r p`).
+
+## Linear Regression model
+```{r}
+hate_crimes_dropna2 <- hate_crimes %>% 
+  select(gini_index, share_non_white, avg_hatecrimes_per_100k_fbi) %>% 
+  na.omit
+hate_crimes_dropna2 <- hate_crimes_dropna2 %>% 
+  mutate(gini_index_c = gini_index - mean(gini_index),
+         share_non_white_c = share_non_white - mean(share_non_white))
+fit <- lm(avg_hatecrimes_per_100k_fbi~gini_index_c*share_non_white_c, data=hate_crimes_dropna2)
+
+summary(fit)
+```
+For a state with a mean gini index and share of non-white people, there were 2.001 predicted hate crimes per 100,000 people. For a one unit increase in the gini index, the predicted hate crime rate rose by 30.21 hate crimes per 100,000 people after adjusting for the share of non-white people. For a one unit increase in the share of non-white people, the predicted hate crime rate falls by 2.546 hate crimes per 100,000 people after adjusting for the gini index. The effect of gini index on hate crime rate increases by 201.0655 for every one unit increase in share of non-white people.
+
+```{r}
+# Plot interaction
+interact_plot(fit, pred = gini_index_c, modx = share_non_white_c)
+```
+This model explains 36.21% of the variation in hate crime rate (adjusted R^2 = 0.3621).  
+```{r}
+# Check assumptions of linearity, normality, homoskedasticity
+resids<-fit$residuals
+fitvals<-fit$fitted.values
+ggplot()+geom_point(aes(fitvals,resids))+geom_hline(yintercept=0, col="red")
+bptest(fit)
+
+ggplot()+geom_histogram(aes(resids),bins=20)
+ggplot()+geom_qq(aes(sample=resids))+geom_qq_line(aes(sample=resids, col="red"))
+```
+The data appears to have an outlier. Outside of this, the assumptions of linearity, heteroskedasticity, and normality appear to be met. 
+```{r}
+# recompute regression results with robust standard errors
+coeftest(fit, vcov=vcovHC(fit))
+```
+Earlier, we found that the centered gini index and its interaction with share of non-white population were both significant, but this is no longer the case with robust standard errors. None of the predictor variables are significant in predicting the response variable.
+
+```{r}
+# rerun regression model with bootstrapped standard errors (resampling observations)
+x_gini <- hate_crimes_dropna2 %>% 
+  pull(gini_index_c)
+x_nonwhite <- hate_crimes_dropna2 %>% 
+  pull(share_non_white_c)
+y <- hate_crimes_dropna2 %>% 
+  pull(avg_hatecrimes_per_100k_fbi)
+
+data <- data.frame(x_gini, x_nonwhite, y)
+
+# resample observations
+samp_dist <- replicate(5000, {
+  boot_dat <- sample_frac(data, replace=T)
+  fit_temp <- lm(y~., data=boot_dat)
+  coef(fit_temp)
+})
+samp_dist %>% t %>% as.data.frame %>% summarize_all(sd)
+```
+Compared to the robust standard errors, the centered gini index has a higher bootstrapped standard error, while the centered share of non-white population has a lower bootstrapped standard error. Compared to the original standard errors, the centered gini index has a much higher bootstrapped standard error, while the centered share of non-white population has a lower bootstrapped standard error again. This indicates that the p-value for both of these predictor variables will be larger than originally determined.
+
+## Logistic Regression model
+```{r}
+# fit logistic regression model from 2 variables (interaction not necessary)
+hate_crimes <- hate_crimes %>% 
+  mutate(above_median_inc = ifelse(house_inc_quartile >= 3, 1, 0),
+         unemp_percent = share_unemp_seas * 100,
+         gini_percent = gini_index * 100)
+
+fit <- glm(above_median_inc~unemp_percent + gini_percent,data=hate_crimes, family="binomial")
+summary(fit)
+```
+For every one percentage point increase in unemployment rate, the odds of a state's median income being above the overall median income (each state weighted equally) decreases by `r 100 * (1 - exp(-0.52514))`% (after accounting for gini index). For every one percentage point increase in the gini index, the odds of a state similarly having an income above the median level decreases by `r 100 * (1 - exp(-0.06185))`% (controlling for unemployment rate).   
+
+```{r}
+# classification diagnostics and confusion matrix
+probs <- predict(fit, type="response")
+hate_crimes$probs <- probs
+class_diag(hate_crimes$probs, hate_crimes$above_median_inc)
+table(hate_crimes$probs > 0.5, hate_crimes$above_median_inc)
+```
+Using this logistic regression, we obtain the following results: accuracy = 58.8%, sensitivity = 57.7%, specificity = 60%, precision = 60%, AUC = .678.
+This confusion matrix shows us predicted classification in the row labels and true classification in the column labels, where 0/FALSE corresponds to below median income and vice versa. Using our logistic regression, we obtain 15 true positives and 15 true negatives, but also 11 false negatives and 10 false positives. 
+
+```{r}
+# density plot
+hate_crimes <- hate_crimes %>% 
+  mutate(above_median_inc_binary = factor(above_median_inc))
+hate_crimes$logit <- predict(fit, type="link")
+hate_crimes %>% 
+  ggplot() + geom_density(aes(logit,color=above_median_inc_binary,fill=above_median_inc_binary), alpha=.4) +
+  theme(legend.position=c(.85,.85)) + geom_vline(xintercept=0) + xlab("logit (log-odds)") + ggtitle("Is a given state above the median income level?")
+```
+
+```{r}
+# ROC curve
+ROCplot <- ggplot(hate_crimes) + geom_roc(aes(d=above_median_inc,m=probs), n.cuts=0)
+ROCplot
+# AUC
+AUC <- calc_auc(ROCplot) %>% select(AUC)
+
+```
+We have a 67.8% chance that a random state that is truly above the median income will have a higher predicted probability than a state that is below the median income.  
+
+```{r}
+# fit logistic regression from all variables
+hate_crimes_small <- hate_crimes %>% 
+  select(4:11, 13, 19) %>% 
+  na.omit
+fit_all <- glm(above_median_inc_binary~., data=hate_crimes_small, family="binomial")
+summary(fit_all)
+```
+(All of the following effects are statistically insignificant.)
+
+For every one percentage point increase in unemployment rate, the odds of a state's median income being above the overall median income (each state weighted equally) decrease by `r 100 * (1 - exp(-9347.04 / 100))`% (after accounting for all other predictors).
+
+For every one percentage point increase in metropolitan population, these odds decrease by `r 100 * (1 - exp(-155.25 / 100))`% (after accounting for all other predictors).
+
+For every one percentage point increase in high-school educated rate, these odds increase by `r 100 * (exp(3640.34 / 100))`% (after accounting for all other predictors).
+
+For every one percentage point increase in non-citizen rate, these odds increase by `r 100 * (exp(4555.29 / 100))`% (after accounting for all other predictors).
+
+For every one percentage point increase in white poverty rate, these odds decrease by `r 100 * (1 - exp(-12368.19 / 100))`% (after accounting for all other predictors).
+
+For every one percentage point increase in gini index, these odds decrease by `r 100 * (1 - exp(-1562.31 / 100))`% (after accounting for all other predictors).
+
+For every one percentage point increase in non-white population rate, these odds decrease by `r 100 * (1 - exp(-731.91 / 100))`% (after accounting for all other predictors).
+
+For every one percentage point increase in Trump voter rate, these odds decrease by `r 100 * (1 - exp(-1698.30 / 100))`% (after accounting for all other predictors).
+
+For an increase of one hate crime per 100,000 people, these odds decrease by `r 100 * (1 - exp(-52.44 / 100))`% (after accounting for all other predictors).
+
+```{r}
+# classification diagnostics
+probs <- predict(fit_all, type="response")
+class_diag(probs, hate_crimes_small$above_median_inc_binary)
+```
+Using this logistic regression, we obtain the following: accuracy = 100%, sensitivity = 100%, specificity = 100%, precision = 100%, and AUC = 1.
+```{r}
+# 10-fold cross validation
+
+k=10
+data1<-hate_crimes_small[sample(nrow(hate_crimes_small)),] #put dataset in random order
+folds<-cut(seq(1:nrow(hate_crimes_small)),breaks=k,labels=F) #create folds
+diags<-NULL
+for(i in 1:k){          # FOR EACH OF 10 FOLDS
+  train<-data1[folds!=i,] # CREATE TRAINING SET
+  test<-data1[folds==i,]  # CREATE TESTING SET
+  
+  truth<-test$above_median_inc_binary
+  
+  fit_CV<- glm(above_median_inc_binary~., data=train, family="binomial")
+  probs<- predict(fit_CV, newdata=test, type="response")
+  
+  diags<-rbind(diags,class_diag(probs,truth)) #CV DIAGNOSTICS FOR EACH FOLD
+}
+summarize_all(diags,mean, na.rm=T) #AVERAGE THE DIAGNOSTICS ACROSS THE 10 FOLDS
+```
+Using 10-fold cross validation, our out-of-sample metrics are as follows: accuracy=78.5%, sensitivity=81.5%, specificity=85.2%, precision=85.8%, and AUC=0.87. 
+```{r}
+# LASSO
+# use lambda.1se
+
+x <- model.matrix(fit_all)[,-1]
+y <- as.matrix(hate_crimes_small$above_median_inc_binary)
+
+cv <- cv.glmnet(x,y, family="binomial")
+lasso1<-glmnet(x,y,family="binomial",alpha=1,lambda=cv$lambda.1se)
+coef(lasso1)
+```
+After performing LASSO variable selection, we find that there are three variables retained when predicting whether a state will be above median income level: share of population that is high school educated, share of white population in poverty, and share of population that votes Trump.
+
+```{r}
+# 10 fold CV with lasso-selected variables
+hate_crimes_lasso <- hate_crimes_small %>% 
+  select(share_pop_hs,share_white_poverty,share_vote_trump,above_median_inc_binary)
+
+k=10
+data1<-hate_crimes_lasso[sample(nrow(hate_crimes_lasso)),] #put dataset in random order
+folds<-cut(seq(1:nrow(hate_crimes_lasso)),breaks=k,labels=F) #create folds
+diags<-NULL
+for(i in 1:k){          # FOR EACH OF 10 FOLDS
+  train<-data1[folds!=i,] # CREATE TRAINING SET
+  test<-data1[folds==i,]  # CREATE TESTING SET
+  
+  truth<-test$above_median_inc_binary
+  
+  fit_CV<- glm(above_median_inc_binary~., data=train, family="binomial")
+  probs<- predict(fit_CV, newdata=test, type="response")
+  
+  diags<-rbind(diags,class_diag(probs,truth)) #CV DIAGNOSTICS FOR EACH FOLD
+}
+summarize_all(diags,mean, na.rm=T) #AVERAGE THE DIAGNOSTICS ACROSS THE 10 FOLDS
+
+```
+Using a logistic regression with just the variables that LASSO selected, our model's out-of-sample AUC is 0.97, which is an improvement from the out-of-sample AUC of the logistic regression with all the variables (0.87).

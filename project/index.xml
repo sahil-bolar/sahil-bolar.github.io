@@ -1,21 +1,11 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Projects on Chris Turner</title>
+    <title>Projects on Sahil Bolar</title>
     <link>/project/</link>
-    <description>Recent content in Projects on Chris Turner</description>
+    <description>Recent content in Projects on Sahil Bolar</description>
     <generator>Hugo -- gohugo.io</generator>
-    <language>en-US</language>
-    <lastBuildDate>Tue, 01 Dec 2020 00:00:00 +0000</lastBuildDate><atom:link href="/project/index.xml" rel="self" type="application/rss+xml" />
-    <item>
-      <title>Project 2</title>
-      <link>/project/project2/</link>
-      <pubDate>Tue, 01 Dec 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/project/project2/</guid>
-      <description> Test Project 2  </description>
-    </item>
-    
+    <language>en-US</language><atom:link href="/project/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Project1</title>
       <link>/project/project1/</link>
@@ -23,6 +13,15 @@
       
       <guid>/project/project1/</guid>
       <description>Project 1  Sahil Bolar  ssb2747  Introduction This project contains two datasets from FiveThirtyEight with data on major, salary, employment, and other pertinent information about the job market. One dataset contains information on all college graduates, while the other contains information only on recent graduates. I am interested in seeing whether and to what extent the job market differs for recent graduates vs the overall workforce, controlling for major choice.</description>
+    </item>
+    
+    <item>
+      <title>Project2</title>
+      <link>/project/project2/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/project/project2/</guid>
+      <description>Project 2  Sahil Bolar, ssb2747  Introduction hate_crimes %&amp;gt;% glimpse ## Rows: 51 ## Columns: 13 ## $ state &amp;lt;chr&amp;gt; &amp;quot;Alabama&amp;quot;, &amp;quot;Alaska&amp;quot;, &amp;quot;Arizona&amp;quot;, &amp;quot;Arkansas… ## $ state_abbrev &amp;lt;chr&amp;gt; &amp;quot;AL&amp;quot;, &amp;quot;AK&amp;quot;, &amp;quot;AZ&amp;quot;, &amp;quot;AR&amp;quot;, &amp;quot;CA&amp;quot;, &amp;quot;CO&amp;quot;, &amp;quot;CT&amp;quot;,… ## $ median_house_inc &amp;lt;int&amp;gt; 42278, 67629, 49254, 44922, 60487, 60940,… ## $ share_unemp_seas &amp;lt;dbl&amp;gt; 0.060, 0.064, 0.063, 0.052, 0.059, 0.040,… ## $ share_pop_metro &amp;lt;dbl&amp;gt; 0.64, 0.63, 0.90, 0.69, 0.97, 0.80, 0.94,… ## $ share_pop_hs &amp;lt;dbl&amp;gt; 0.</description>
     </item>
     
   </channel>
