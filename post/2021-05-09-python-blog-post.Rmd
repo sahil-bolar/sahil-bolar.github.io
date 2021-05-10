@@ -1,0 +1,33 @@
+---
+title: Python Blog Post
+author: ''
+date: '2021-05-09'
+slug: python-blog-post
+categories: []
+tags: []
+description: ''
+---
+
+Let's examine the diamonds dataset using both R and Python, thanks to the wonders of reticulate!
+
+![diamonds](/post/2021-05-09-python-blog-post_files/diamonds.jpg)
+
+```{r}
+library(reticulate)
+library(tidyverse)
+df <- diamonds
+cut_counts <- df %>% 
+  group_by(cut) %>% 
+  count()
+```
+
+```{python}
+import numpy as np
+
+total = np.sum(r.cut_counts['n'])
+rel_freq = np.divide(r.cut_counts['n'],total)
+for i in range(len(rel_freq)):
+    print(f"{rel_freq[i]*100:.2f}% of the diamonds in the dataset belong to the {r.cut_counts['cut'][i]} cut type.")
+```
+
+

@@ -69,10 +69,40 @@
         <div class="panel panel-default">
           <div class="panel-body">
             <div class="blogpost">
-              <p>hi</p>
-<pre><code class="language-{python}" data-lang="{python}">1+1
-</code></pre><pre><code class="language-{r}" data-lang="{r}">1+1
-</code></pre>
+              
+
+
+<p>Let’s examine the diamonds dataset using both R and Python, thanks to the wonders of reticulate!</p>
+<div class="figure">
+<img src="../../../../../post/2021-05-09-python-blog-post_files/diamonds.jpg" alt="" />
+<p class="caption">diamonds</p>
+</div>
+<pre class="r"><code>library(reticulate)
+library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.0 ──</code></pre>
+<pre><code>## ✓ ggplot2 3.3.3     ✓ purrr   0.3.4
+## ✓ tibble  3.0.4     ✓ dplyr   1.0.2
+## ✓ tidyr   1.1.2     ✓ stringr 1.4.0
+## ✓ readr   1.4.0     ✓ forcats 0.5.0</code></pre>
+<pre><code>## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>df &lt;- diamonds
+cut_counts &lt;- df %&gt;% 
+  group_by(cut) %&gt;% 
+  count()</code></pre>
+<pre class="python"><code>import numpy as np
+
+total = np.sum(r.cut_counts[&#39;n&#39;])
+rel_freq = np.divide(r.cut_counts[&#39;n&#39;],total)
+for i in range(len(rel_freq)):
+    print(f&quot;{rel_freq[i]*100:.2f}% of the diamonds in the dataset belong to the {r.cut_counts[&#39;cut&#39;][i]} cut type.&quot;)</code></pre>
+<pre><code>## 2.98% of the diamonds in the dataset belong to the Fair cut type.
+## 9.10% of the diamonds in the dataset belong to the Good cut type.
+## 22.40% of the diamonds in the dataset belong to the Very Good cut type.
+## 25.57% of the diamonds in the dataset belong to the Premium cut type.
+## 39.95% of the diamonds in the dataset belong to the Ideal cut type.</code></pre>
+
             
         <hr>         <div class="related-posts">
                 <h5>Related Posts</h5>
